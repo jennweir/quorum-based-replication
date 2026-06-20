@@ -31,9 +31,14 @@ class QuorumSystem:
         start_time = time.time()
         success_count = 0
         
-        # TODO: Implement Write Quorum Logic here. 
-        # Hint: Iterate through self.nodes. Call node.write(). 
-        # Keep track of successes and break when write_quorum is reached.
+        # write quorum logic implementation
+        # iterate through nodes calling write
+        for node in self.nodes:
+            if node.write(key, value):
+                success_count += 1
+            # keep track of successful writes and break when write quorum is reached
+            if success_count >= write_quorum:
+                break
         
         end_time = time.time()
         latency = end_time - start_time
@@ -42,24 +47,40 @@ class QuorumSystem:
     def read(self, key, read_quorum):
         start_time = time.time()
         read_values = {}
-        
-        # TODO: Implement Read Quorum Logic here.
-        # Hint: Iterate through self.nodes. Call node.read().
-        # Keep track of how many times each value is returned. 
-        # Return the value that meets the read_quorum threshold.
-        
-        end_time = time.time()
-        latency = end_time - start_time
-        return None, latency # Replace None with the actual value
+        # read quorum logic implementation
+        # iterate through nodes calling read
+        for node in self.nodes:
+            node_value = node.read(key)
+            # keep track of the number of times each node value is found
+            if node_value in read_values:
+                read_values[node_value] += 1
+            else:
+                read_values[node_value] = 1
+            # return the value that meets the read quorum threshold
+            if read_values[node_value] >= read_quorum:
+                end_time = time.time()
+                latency = end_time - start_time
+                return node_value, latency
+        return None, 0
 
-# --- Example Evaluation Setup ---
+# 3 node cluster setup and testing different scenarios
 nodes = [Node("A"), Node("B"), Node("C")]
 system = QuorumSystem(nodes)
 
 print("--- Scenario A: Strong Consistency (W=2, R=2) ---")
-# TODO: Write your tests here to measure latency
+system.write("k", "v", 2)
+value, latency = system.read("k", 2)
+print(f"Read value: {value}, Latency: {latency}")
+
+print("\n--- Scenario B: Fast Writes, Slow Reads (W=1, R=3) ---")
+system.write("k", "v1", 1)
+value, latency = system.read("k", 3)
+print(f"Read value: {value}, Latency: {latency}")
 
 print("\n--- Scenario C: Eventual Consistency (W=1, R=1) ---")
-# To test staleness, write a value, then fail the node that has the latest data!
-# nodes[0].is_down = True
-# TODO: Write a test that proves R=1 can return stale data if the updated node is down.
+# test staleness by writing a value and then creating simulated node failure before reading
+system.write("k", "v2", 1)
+nodes[0].is_down = True
+value, latency = system.read("k", 1)
+# proves R=1 can return stale data if the updated node is down
+print(f"Read value: {value}, Latency: {latency}")
