@@ -52,6 +52,8 @@ class QuorumSystem:
         for node in self.nodes:
             node_value = node.read(key)
             # keep track of the number of times each node value is found
+            if node_value is None:
+                continue
             if node_value in read_values:
                 read_values[node_value] += 1
             else:
@@ -68,19 +70,21 @@ nodes = [Node("A"), Node("B"), Node("C")]
 system = QuorumSystem(nodes)
 
 print("--- Scenario A: Strong Consistency (W=2, R=2) ---")
-system.write("k", "v", 2)
-value, latency = system.read("k", 2)
+system.write("k1", "v0", 2)
+value, latency = system.read("k1", 2)
 print(f"Read value: {value}, Latency: {latency}")
 
 print("\n--- Scenario B: Fast Writes, Slow Reads (W=1, R=3) ---")
-system.write("k", "v1", 1)
-value, latency = system.read("k", 3)
+system.write("k2", "v1", 3)
+system.write("k2", "v2", 1)
+value, latency = system.read("k2", 3)
 print(f"Read value: {value}, Latency: {latency}")
 
 print("\n--- Scenario C: Eventual Consistency (W=1, R=1) ---")
 # test staleness by writing a value and then creating simulated node failure before reading
-system.write("k", "v2", 1)
+system.write("k3", "v4", 3)
+system.write("k3", "v5", 1)
 nodes[0].is_down = True
-value, latency = system.read("k", 1)
+value, latency = system.read("k3", 1)
 # proves R=1 can return stale data if the updated node is down
 print(f"Read value: {value}, Latency: {latency}")
