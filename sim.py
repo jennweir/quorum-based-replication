@@ -63,7 +63,9 @@ class QuorumSystem:
                 end_time = time.time()
                 latency = end_time - start_time
                 return node_value, latency
-        return None, 0
+        end_time = time.time()
+        latency = end_time - start_time
+        return None, latency
 
 # 3 node cluster setup and testing different scenarios
 nodes = [Node("A"), Node("B"), Node("C")]
