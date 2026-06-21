@@ -82,11 +82,19 @@ system.write("k2", "v2", 1)
 value, latency = system.read("k2", 3)
 print(f"Read value: {value}, Latency: {latency}")
 
-print("\n--- Scenario C: Eventual Consistency (W=1, R=1) ---")
+print("\n--- Scenario C: Eventual Consistency with node failure (W=1, R=1) ---")
 # test staleness by writing a value and then creating simulated node failure before reading
 system.write("k3", "v4", 3)
 system.write("k3", "v5", 1)
 nodes[0].is_down = True
 value, latency = system.read("k3", 1)
 # proves R=1 can return stale data if the updated node is down
+print(f"Read value: {value}, Latency: {latency}")
+nodes[0].is_down = False  # bring node back up for next test
+
+print("\n--- Scenario D: Eventual Consistency without node failure (W=1, R=1) ---")
+# test staleness by writing a value and then creating simulated node failure before reading
+system.write("k4", "v6", 3)
+system.write("k4", "v7", 1)
+value, latency = system.read("k4", 1)
 print(f"Read value: {value}, Latency: {latency}")
